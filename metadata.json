@@ -1,0 +1,6 @@
+{
+  "name": "SEJATI MAPS — Sistem Informasi Geografis & Pemesanan Kuliner Pangkal Pinang",
+  "description": "Aplikasi pemesanan makanan dan minuman berbasis geospatial (GIS) untuk wilayah Kota Pangkal Pinang, Kepulauan Bangka Belitung.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
