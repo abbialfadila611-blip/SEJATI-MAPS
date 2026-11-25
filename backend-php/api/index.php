@@ -59,7 +59,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $route = $_GET['route'] ?? '';
 if ($route === '') {
     $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-    $pos = strpos($uriPath, '/api');
+    $pos = strrpos($uriPath, '/api');
     $route = $pos !== false ? substr($uriPath, $pos + 4) : $uriPath;
 }
 $route = '/' . trim($route, '/');
@@ -575,7 +575,7 @@ try {
     // =========================================================================
     // 7. PANEL ADMIN (dilindungi Bearer token role `admin`)
     // =========================================================================
-    if (str_starts_with($route, '/admin/')) {
+    if (strpos($route, '/admin/') === 0) {
         Auth::requireRole('admin');
 
         // Dashboard Statistik

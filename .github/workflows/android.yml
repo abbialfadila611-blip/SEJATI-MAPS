@@ -75,10 +75,20 @@ jobs:
       - name: Periksa tipe TypeScript
         run: npm run lint
 
-      - name: Bangun aset web produksi (Vite)
+      - name: Validasi & bangun aset web produksi (Vite)
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || '' }}
-        run: npm run build
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_BASE_URL || '' }}
+        run: |
+          if [ -n "$VITE_API_BASE_URL" ]; then
+            if echo "$VITE_API_BASE_URL" | grep -qiE 'localhost|127\.0\.0\.1|10\.0\.2\.2|ais-dev-|ais-pre-'; then
+              echo "ERROR: VITE_API_BASE_URL tidak boleh memakai localhost atau alamat preview AI Studio untuk APK production."
+              exit 1
+            fi
+            echo "VITE_API_BASE_URL terkonfigurasi untuk build APK production."
+          else
+            echo "PERINGATAN: VITE_API_BASE_URL belum diisi di GitHub Actions Variables/Secrets. APK akan memakai katalog bawaan hingga URL API hosting diisi."
+          fi
+          npm run build
 
       - name: Sinkronkan proyek Capacitor Android
         run: npx cap sync android

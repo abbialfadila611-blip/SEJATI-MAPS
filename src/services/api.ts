@@ -23,7 +23,12 @@ import {
   isPointInPangkalPinang,
 } from '../utils/geoPangkalPinang';
 
-const RAW_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || '';
+const RAW_ENV_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || '';
+const IS_INVALID_NATIVE_URL =
+  Capacitor.isNativePlatform() &&
+  RAW_ENV_BASE !== '' &&
+  /(localhost|127\.0\.0\.1|10\.0\.2\.2|ais-dev-|ais-pre-)/i.test(RAW_ENV_BASE);
+const RAW_BASE = IS_INVALID_NATIVE_URL ? '' : RAW_ENV_BASE;
 export const API_BASE = RAW_BASE ? RAW_BASE.replace(/\/+$/, '') : '/api';
 export const IS_PHP_BACKEND = Boolean(RAW_BASE);
 
