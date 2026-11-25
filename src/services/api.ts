@@ -104,7 +104,23 @@ async function request<T>(
     throw new Error('Tidak dapat terhubung ke server API SEJATI MAPS.');
   }
 
-  const data = (await res.json().catch(() => ({}))) as {
+  let parsedBody: unknown = null;
+  try {
+    parsedBody = await res.json();
+  } catch {
+    parsedBody = null;
+  }
+
+  if (!parsedBody || typeof parsedBody !== 'object') {
+    if (Capacitor.isNativePlatform() && !RAW_BASE) {
+      throw new Error(
+        'APK belum terhubung ke server API MySQL sejati_maps (VITE_API_BASE_URL belum diatur).'
+      );
+    }
+    throw new Error(`Respons server tidak valid (${res.status}).`);
+  }
+
+  const data = parsedBody as {
     success?: boolean;
     message?: string;
   } & T;
@@ -123,7 +139,15 @@ async function request<T>(
 export const api = {
   getCatalog: async () => {
     try {
-      return await request<{ kategori: KategoriMenu[]; menu: MenuItem[]; warkop: Warkop[] }>('/catalog');
+      const res = await request<{ kategori: KategoriMenu[]; menu: MenuItem[]; warkop: Warkop[] }>('/catalog');
+      if (
+        !Array.isArray(res.kategori) ||
+        !Array.isArray(res.menu) ||
+        !Array.isArray(res.warkop)
+      ) {
+        throw new Error('Format data katalog tidak lengkap.');
+      }
+      return res;
     } catch (err) {
       if (Capacitor.isNativePlatform() && !RAW_BASE) {
         return getBundledCatalog();
@@ -134,9 +158,13 @@ export const api = {
 
   validateGeo: async (lat: number, lng: number) => {
     try {
-      return await request<GeoValidationResult>(
+      const res = await request<GeoValidationResult>(
         `/geo/validate?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`
       );
+      if (typeof res.valid !== 'boolean') {
+        throw new Error('Format hasil validasi wilayah tidak valid.');
+      }
+      return res;
     } catch (err) {
       if (Capacitor.isNativePlatform() && !RAW_BASE) {
         return validateGeoLocally(lat, lng);

@@ -65,9 +65,9 @@ export default function App() {
     try {
       setCatalogError(null);
       const data = await api.getCatalog();
-      setKategoriList(data.kategori);
-      setMenuList(data.menu);
-      setWarkopList(data.warkop);
+      setKategoriList(Array.isArray(data?.kategori) ? data.kategori : []);
+      setMenuList(Array.isArray(data?.menu) ? data.menu : []);
+      setWarkopList(Array.isArray(data?.warkop) ? data.warkop : []);
     } catch (err) {
       setCatalogError(
         err instanceof Error ? err.message : 'Gagal memuat katalog dari server.'

@@ -7,6 +7,10 @@ import {VitePWA} from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
   return {
+    base: './',
+    build: {
+      target: 'es2019',
+    },
     plugins: [
       react(),
       tailwindcss(),

@@ -1,5 +1,5 @@
 import L from 'leaflet';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Warkop } from '../types';
 import {
   PANGKAL_PINANG_CENTER,
@@ -41,6 +41,7 @@ export function PangkalPinangMap({
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const onSelectRef = useRef(onSelectPoint);
   const pickModeRef = useRef(pickMode);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   onSelectRef.current = onSelectPoint;
   pickModeRef.current = pickMode;
@@ -48,40 +49,48 @@ export function PangkalPinangMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const map = L.map(containerRef.current, {
-      center: PANGKAL_PINANG_CENTER,
-      zoom: 13,
-      scrollWheelZoom: true,
-    });
+    let map: L.Map;
+    try {
+      map = L.map(containerRef.current, {
+        center: PANGKAL_PINANG_CENTER,
+        zoom: 13,
+        scrollWheelZoom: true,
+      });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
 
-    // Poligon batas wilayah administratif Kota Pangkal Pinang
-    L.polygon(PANGKAL_PINANG_POLYGON, {
-      color: '#14532D',
-      weight: 2,
-      dashArray: '6 4',
-      fillColor: '#14532D',
-      fillOpacity: 0.08,
-    })
-      .bindTooltip('Batas Layanan: Kota Pangkal Pinang', { sticky: true })
-      .addTo(map);
+      // Poligon batas wilayah administratif Kota Pangkal Pinang
+      L.polygon(PANGKAL_PINANG_POLYGON, {
+        color: '#14532D',
+        weight: 2,
+        dashArray: '6 4',
+        fillColor: '#14532D',
+        fillOpacity: 0.08,
+      })
+        .bindTooltip('Batas Layanan: Kota Pangkal Pinang', { sticky: true })
+        .addTo(map);
 
-    const group = L.layerGroup().addTo(map);
-    layerGroupRef.current = group;
-    mapRef.current = map;
+      const group = L.layerGroup().addTo(map);
+      layerGroupRef.current = group;
+      mapRef.current = map;
 
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      if (pickModeRef.current && onSelectRef.current) {
-        onSelectRef.current(
-          Number(e.latlng.lat.toFixed(7)),
-          Number(e.latlng.lng.toFixed(7))
-        );
-      }
-    });
+      map.on('click', (e: L.LeafletMouseEvent) => {
+        if (pickModeRef.current && onSelectRef.current) {
+          onSelectRef.current(
+            Number(e.latlng.lat.toFixed(7)),
+            Number(e.latlng.lng.toFixed(7))
+          );
+        }
+      });
+    } catch (err) {
+      setMapError(
+        err instanceof Error ? err.message : 'Gagal menginisialisasi peta digital.'
+      );
+      return;
+    }
 
     return () => {
       map.remove();
@@ -189,6 +198,19 @@ export function PangkalPinangMap({
     if (!map || !focusPoint) return;
     map.flyTo([focusPoint.latitude, focusPoint.longitude], 14, { duration: 0.6 });
   }, [focusPoint]);
+
+  if (mapError) {
+    return (
+      <div
+        className={`flex w-full flex-col items-center justify-center rounded-xl border border-[#E6E4DF] bg-[#F3F1EC] p-6 text-center ${heightClass}`}
+      >
+        <p className="text-sm font-semibold text-[#1C1917]">
+          Peta Interaktif Tidak Dapat Dimuat
+        </p>
+        <p className="mt-1 text-xs text-[#57534E]">{mapError}</p>
+      </div>
+    );
+  }
 
   return (
     <div
