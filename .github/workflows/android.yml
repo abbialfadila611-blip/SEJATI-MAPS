@@ -36,7 +36,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Siapkan Android SDK bawaan runner & pasang Platform 36
+      - name: Gunakan Android SDK bawaan runner GitHub
         shell: bash
         run: |
           set +o pipefail
@@ -47,21 +47,27 @@ jobs:
           fi
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "sdk.dir=$SDK_ROOT" > android/local.properties
 
-          mkdir -p "$SDK_ROOT/licenses"
-          printf '\n24333f8a63b6825ea9c5514f83c2829b004d1fee' > "$SDK_ROOT/licenses/android-sdk-license"
-          printf '\n84831b9409646a918e30573bab4c9c91346d8abd' > "$SDK_ROOT/licenses/android-sdk-preview-license"
-
-          SDKMANAGER="$(find "$SDK_ROOT" -maxdepth 4 -type f -name sdkmanager 2>/dev/null | head -n 1 || true)"
-          if [ -n "$SDKMANAGER" ]; then
-            chmod +x "$SDKMANAGER"
-            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
-            "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
-          else
-            echo "sdkmanager tidak ditemukan di $SDK_ROOT, Gradle akan mengunduh komponen SDK secara otomatis."
+          if [ -d "$SDK_ROOT/platforms/android-36" ] && [ -d "$SDK_ROOT/build-tools/36.0.0" ]; then
+            echo "Android SDK Platform 36 dan Build Tools 36.0.0 sudah tersedia."
+            exit 0
           fi
 
-          echo "sdk.dir=$SDK_ROOT" > android/local.properties
+          SDKMANAGER="$(find "$SDK_ROOT" -maxdepth 4 -type f -name sdkmanager 2>/dev/null | head -n 1 || true)"
+          if [ -n "$SDKMANAGER" ] && [ -x "$SDKMANAGER" ]; then
+            if [ -w "$SDK_ROOT" ]; then
+              yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+              "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+            elif command -v sudo >/dev/null 2>&1; then
+              yes | sudo "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+              sudo "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+            else
+              echo "Mengandalkan auto-download Gradle untuk komponen SDK yang kurang."
+            fi
+          else
+            echo "sdkmanager tidak dieksekusi langsung; Gradle akan menggunakan SDK yang tersedia."
+          fi
 
       - name: Pasang dependensi npm
         run: npm install
@@ -77,7 +83,7 @@ jobs:
       - name: Sinkronkan proyek Capacitor Android
         run: npx cap sync android
 
-      - name: Beri izin eksekusi gradlew & Build APK
+      - name: Build APK Android menggunakan Gradle
         run: |
           chmod +x android/gradlew
           cd android
