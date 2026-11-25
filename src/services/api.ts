@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+import { INITIAL_KATEGORI, INITIAL_MENU, INITIAL_WARKOP } from '../../server/seedData';
 import type {
   AdminUser,
   DashboardStats,
@@ -15,10 +17,60 @@ import type {
   StatusReservasi,
   Warkop,
 } from '../types';
+import {
+  estimateDistrict,
+  haversineDistanceKm,
+  isPointInPangkalPinang,
+} from '../utils/geoPangkalPinang';
 
 const RAW_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || '';
 export const API_BASE = RAW_BASE ? RAW_BASE.replace(/\/+$/, '') : '/api';
 export const IS_PHP_BACKEND = Boolean(RAW_BASE);
+
+function getBundledCatalog(): {
+  kategori: KategoriMenu[];
+  menu: MenuItem[];
+  warkop: Warkop[];
+} {
+  const catMap = new Map(INITIAL_KATEGORI.map((k) => [k.id, k.nama_kategori]));
+  return {
+    kategori: INITIAL_KATEGORI,
+    menu: INITIAL_MENU.map((m) => ({
+      ...m,
+      nama_kategori: m.kategori_id ? catMap.get(m.kategori_id) : undefined,
+    })),
+    warkop: INITIAL_WARKOP,
+  };
+}
+
+function validateGeoLocally(lat: number, lng: number): GeoValidationResult {
+  const valid = isPointInPangkalPinang(lat, lng);
+  const kecamatan = estimateDistrict(lat, lng);
+  let nearest: { id: number; nama: string; distance_km: number } | null = null;
+  let bestDist = Infinity;
+
+  for (const w of INITIAL_WARKOP) {
+    if (w.latitude !== null && w.longitude !== null) {
+      const dist = haversineDistanceKm(lat, lng, w.latitude, w.longitude);
+      if (dist < bestDist) {
+        bestDist = dist;
+        nearest = { id: w.id, nama: w.nama, distance_km: dist };
+      }
+    }
+  }
+
+  return {
+    valid,
+    latitude: lat,
+    longitude: lng,
+    region: 'Kota Pangkal Pinang',
+    kecamatan_estimasi: kecamatan,
+    message: valid
+      ? `Lokasi Anda berada dalam wilayah layanan Kota Pangkal Pinang (${kecamatan ?? 'Pangkal Pinang'}).`
+      : 'Lokasi Anda berada di luar batas wilayah layanan administratif Kota Pangkal Pinang.',
+    nearest_warkop: nearest,
+  };
+}
 
 async function request<T>(
   path: string,
@@ -36,11 +88,21 @@ async function request<T>(
     headers.Authorization = `Bearer ${options.token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method: options.method ?? 'GET',
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    });
+  } catch {
+    if (Capacitor.isNativePlatform() && !RAW_BASE) {
+      throw new Error(
+        'Mode APK offline: fitur transaksi memerlukan URL server API (VITE_API_BASE_URL) yang terhubung ke database MySQL sejati_maps.'
+      );
+    }
+    throw new Error('Tidak dapat terhubung ke server API SEJATI MAPS.');
+  }
 
   const data = (await res.json().catch(() => ({}))) as {
     success?: boolean;
@@ -48,17 +110,40 @@ async function request<T>(
   } & T;
 
   if (!res.ok || data.success === false) {
+    if (Capacitor.isNativePlatform() && !RAW_BASE && res.status === 404) {
+      throw new Error(
+        'APK belum terhubung ke URL server backend. Atur variabel VITE_API_BASE_URL di GitHub untuk menyinkronkan akun & pesanan dengan MySQL sejati_maps.'
+      );
+    }
     throw new Error(data.message || `Permintaan gagal (${res.status})`);
   }
   return data;
 }
 
 export const api = {
-  getCatalog: () =>
-    request<{ kategori: KategoriMenu[]; menu: MenuItem[]; warkop: Warkop[] }>('/catalog'),
+  getCatalog: async () => {
+    try {
+      return await request<{ kategori: KategoriMenu[]; menu: MenuItem[]; warkop: Warkop[] }>('/catalog');
+    } catch (err) {
+      if (Capacitor.isNativePlatform() && !RAW_BASE) {
+        return getBundledCatalog();
+      }
+      throw err;
+    }
+  },
 
-  validateGeo: (lat: number, lng: number) =>
-    request<GeoValidationResult>(`/geo/validate?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`),
+  validateGeo: async (lat: number, lng: number) => {
+    try {
+      return await request<GeoValidationResult>(
+        `/geo/validate?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`
+      );
+    } catch (err) {
+      if (Capacitor.isNativePlatform() && !RAW_BASE) {
+        return validateGeoLocally(lat, lng);
+      }
+      throw err;
+    }
+  },
 
   registerCustomer: (payload: {
     nama: string;

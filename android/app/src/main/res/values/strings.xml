@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SEJATI MAPS</string>
+    <string name="title_activity_main">SEJATI MAPS</string>
+    <string name="package_name">id.pangkalpinang.sejatimaps</string>
+    <string name="custom_url_scheme">id.pangkalpinang.sejatimaps</string>
+</resources>

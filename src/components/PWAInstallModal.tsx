@@ -299,24 +299,23 @@ export function PWAInstallModal({
                 <div className="space-y-3 rounded-xl border border-[#E6E4DF] bg-white p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-[#1C1917]">
                     <Terminal className="h-4 w-4 text-[#14532D]" />
-                    <span>Bangun File .APK Android (Capacitor)</span>
+                    <span>Unduh File .APK Android via GitHub</span>
                   </div>
                   <p className="text-xs leading-relaxed text-[#57534E]">
-                    Konfigurasi Android native sudah siap di{' '}
-                    <code className="font-mono text-[#1C1917]">capacitor.config.ts</code>{' '}
-                    (ID paket:{' '}
-                    <code className="font-mono text-[#1C1917]">id.pangkalpinang.sejatimaps</code>).
-                    Untuk mengunduh/menghasilkan file <code className="font-mono">.apk</code> di komputer Anda dengan Android Studio:
+                    Proyek Android Capacitor (<code className="font-mono text-[#1C1917]">id.pangkalpinang.sejatimaps</code>) dan workflow otomatis{' '}
+                    <code className="font-mono text-[#1C1917]">.github/workflows/android-apk.yml</code> sudah disiapkan. Anda tidak perlu laptop untuk membangun APK:
                   </p>
-                  <pre className="font-mono overflow-x-auto rounded-lg border border-[#E6E4DF] bg-[#FAFAF8] p-3 text-[11px] leading-relaxed text-[#1C1917]">
-{`npm run build
-npx cap add android
-npx cap sync android
-npx cap open android`}
-                  </pre>
-                  <p className="text-[11px] text-[#78716C]">
-                    Di Android Studio, pilih menu <strong>Build &gt; Build Bundle(s) / APK(s) &gt; Build APK(s)</strong> untuk mendapatkan file instalasi Android (.apk).
-                  </p>
+                  <ol className="space-y-2 text-xs leading-relaxed text-[#57534E]">
+                    <li className="rounded-lg border border-[#E6E4DF] bg-[#FAFAF8] p-2.5">
+                      <strong className="text-[#1C1917]">1. Simpan / Push ke GitHub:</strong> Pastikan seluruh file proyek sudah masuk ke branch <code className="font-mono">main</code> atau <code className="font-mono">master</code> repository GitHub Anda.
+                    </li>
+                    <li className="rounded-lg border border-[#E6E4DF] bg-[#FAFAF8] p-2.5">
+                      <strong className="text-[#1C1917]">2. Build Otomatis Berjalan:</strong> GitHub Actions otomatis menyusun <code className="font-mono">SEJATI-MAPS-android.apk</code> dalam beberapa menit (pantau di tab <strong>Actions</strong>).
+                    </li>
+                    <li className="rounded-lg border border-[#E6E4DF] bg-[#FAFAF8] p-2.5">
+                      <strong className="text-[#1C1917]">3. Unduh Langsung di HP:</strong> Buka menu <strong>Releases</strong> di halaman GitHub repository Anda, ketuk <code className="font-mono">SEJATI-MAPS-android.apk</code>, lalu buka file untuk memasang aplikasi.
+                    </li>
+                  </ol>
                 </div>
               )}
             </>

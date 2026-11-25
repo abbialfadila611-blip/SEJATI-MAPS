@@ -1,0 +1,107 @@
+name: Build Android APK (SEJATI MAPS)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android-apk:
+    name: Bangun APK Android SEJATI MAPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil kode sumber repository
+        uses: actions/checkout@v4
+
+      - name: Siapkan Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Siapkan Java JDK 21 (wajib untuk Capacitor 8 / AGP 8.13)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Siapkan Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Pasang Android SDK Platform 36 & Build Tools 36.0.0
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Pasang dependensi npm
+        run: npm install
+
+      - name: Periksa tipe TypeScript
+        run: npm run lint
+
+      - name: Bangun aset web produksi (Vite)
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || '' }}
+        run: npm run build
+
+      - name: Sinkronkan proyek Capacitor Android
+        run: npx cap sync android
+
+      - name: Bangun file APK Android menggunakan Gradle
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Verifikasi & siapkan file APK hasil build
+        run: |
+          APK_SRC="android/app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -f "$APK_SRC" ]; then
+            echo "ERROR: File APK tidak ditemukan di $APK_SRC"
+            exit 1
+          fi
+          mkdir -p release-apk
+          cp "$APK_SRC" release-apk/SEJATI-MAPS-android.apk
+          ls -lh release-apk/SEJATI-MAPS-android.apk
+
+      - name: Simpan APK sebagai GitHub Actions Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SEJATI-MAPS-Android-APK
+          path: release-apk/SEJATI-MAPS-android.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Tentukan tag rilis APK
+        id: release_meta
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "title=SEJATI MAPS Android ${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=apk-latest" >> "$GITHUB_OUTPUT"
+            echo "title=SEJATI MAPS Android APK (Terbaru)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publikasikan APK ke GitHub Releases (unduh langsung di HP)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_meta.outputs.tag }}
+          name: ${{ steps.release_meta.outputs.title }}
+          body: |
+            File APK Android resmi untuk aplikasi **SEJATI MAPS** (Kuliner & Peta GIS Kota Pangkal Pinang).
+
+            **Cara Pasang di HP Android:**
+            1. Unduh file `SEJATI-MAPS-android.apk` di bawah ini langsung dari browser HP.
+            2. Buka file APK yang selesai diunduh.
+            3. Jika diminta izin, aktifkan **Izinkan dari sumber ini**, lalu ketuk **Instal**.
+          make_latest: true
+          files: |
+            release-apk/SEJATI-MAPS-android.apk
