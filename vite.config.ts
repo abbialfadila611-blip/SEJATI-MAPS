@@ -3,12 +3,84 @@ import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import {defineConfig} from 'vite';
+import {VitePWA} from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
   return {
     plugins: [
       react(),
       tailwindcss(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['icon.svg', 'apple-touch-icon.png'],
+        manifest: {
+          id: '/',
+          name: 'SEJATI MAPS — Kuliner & Peta GIS Pangkal Pinang',
+          short_name: 'SEJATI MAPS',
+          description:
+            'Sistem Informasi Geografis dan Pemesanan Kuliner Kota Pangkal Pinang, Kepulauan Bangka Belitung.',
+          theme_color: '#14532D',
+          background_color: '#FAFAF8',
+          display: 'standalone',
+          orientation: 'portrait-primary',
+          scope: '/',
+          start_url: '/',
+          lang: 'id',
+          icons: [
+            {
+              src: 'pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: 'pwa-maskable-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          navigateFallbackDenylist: [/^\/api\//],
+          runtimeCaching: [
+            {
+              urlPattern: /\/src\/assets\/images\/.*\.(?:jpg|jpeg|png|webp)$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'sejati-menu-images',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+              },
+            },
+            {
+              urlPattern: /\/api\/catalog$/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'sejati-catalog-api',
+                networkTimeoutSeconds: 4,
+                expiration: {
+                  maxEntries: 5,
+                  maxAgeSeconds: 60 * 60 * 24,
+                },
+              },
+            },
+          ],
+        },
+        devOptions: {
+          enabled: true,
+          type: 'module',
+        },
+      }),
       // Copies src/assets into dist/ so root-relative URLs like
       // "/src/assets/images/..." (e.g. generate_image output) still resolve
       // in production builds. Do not remove.

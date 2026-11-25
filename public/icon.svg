@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#14532D" />
+  <circle cx="256" cy="256" r="196" fill="#166534" fill-opacity="0.45" />
+  <!-- Map Pin -->
+  <path
+    d="M256 96C184.2 96 126 154.2 126 226C126 314.8 232.6 408.2 248.4 421.5C252.8 425.2 259.2 425.2 263.6 421.5C279.4 408.2 386 314.8 386 226C386 154.2 327.8 96 256 96Z"
+    fill="#FAFAF8"
+  />
+  <!-- Inner Coffee / Culinary Emblem -->
+  <circle cx="256" cy="222" r="78" fill="#14532D" />
+  <!-- Cup body -->
+  <path
+    d="M214 208H286V236C286 255.9 269.9 272 250 272H250C230.1 272 214 255.9 214 236V208Z"
+    fill="#FAFAF8"
+  />
+  <!-- Cup handle -->
+  <path
+    d="M286 216H294C301.7 216 308 222.3 308 230C308 237.7 301.7 244 294 244H286"
+    stroke="#FAFAF8"
+    stroke-width="10"
+    stroke-linecap="round"
+  />
+  <!-- Saucer -->
+  <rect x="206" y="278" width="88" height="10" rx="5" fill="#F59E0B" />
+  <!-- Aroma lines -->
+  <path d="M234 180C234 172 240 168 240 160" stroke="#F59E0B" stroke-width="8" stroke-linecap="round" />
+  <path d="M256 176C256 168 262 164 262 156" stroke="#F59E0B" stroke-width="8" stroke-linecap="round" />
+</svg>

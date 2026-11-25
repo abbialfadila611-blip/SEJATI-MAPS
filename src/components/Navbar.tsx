@@ -9,6 +9,7 @@ import {
   Menu,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
   UserCheck,
   UtensilsCrossed,
   X,
@@ -27,6 +28,8 @@ interface NavbarProps {
   onOpenCustomerAuth: () => void;
   onCustomerLogout: () => void;
   admin: AdminUser | null;
+  showInstallApp?: boolean;
+  onOpenInstallApp?: () => void;
 }
 
 const ROUTE_LABELS: Record<AppRoute, string> = {
@@ -47,6 +50,8 @@ export function Navbar({
   onOpenCustomerAuth,
   onCustomerLogout,
   admin,
+  showInstallApp = false,
+  onOpenInstallApp,
 }: NavbarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -437,6 +442,37 @@ export function Navbar({
                   </button>
                 </div>
               </div>
+
+              {showInstallApp && onOpenInstallApp && (
+                <div>
+                  <p className="mb-2 px-2 text-[11px] font-semibold tracking-wider text-[#78716C] uppercase">
+                    Aplikasi Android
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      onOpenInstallApp();
+                    }}
+                    className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-[#14532D]/25 bg-[#14532D]/8 px-3 py-2.5 text-left text-[#14532D] transition-colors hover:bg-[#14532D]/14"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#14532D] text-white">
+                        <Smartphone className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">
+                          Unduh / Pasang di Android
+                        </p>
+                        <p className="truncate text-xs text-[#166534]">
+                          Simpan ke layar utama HP
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-[#14532D]" />
+                  </button>
+                </div>
+              )}
             </nav>
 
             {/* Footer Drawer */}

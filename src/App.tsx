@@ -8,6 +8,8 @@ import { HomeView } from './components/HomeView';
 import { MapExplorerView } from './components/MapExplorerView';
 import { MenuDetailModal } from './components/MenuDetailModal';
 import { Navbar, type AppRoute } from './components/Navbar';
+import { OfflineIndicator, PWAInstallModal } from './components/PWAInstallModal';
+import { usePWAInstall } from './hooks/usePWAInstall';
 import { api } from './services/api';
 import { detectCurrentPosition } from './services/geolocation';
 import type {
@@ -35,7 +37,15 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
   const [cartToast, setCartToast] = useState<string | null>(null);
+  const {
+    canNativePrompt,
+    isInstalled,
+    isIOS,
+    isInIframe,
+    promptInstall,
+  } = usePWAInstall();
 
   // Token autentikasi disimpan hanya di memori React (bukan localStorage)
   const [customer, setCustomer] = useState<Pelanggan | null>(null);
@@ -146,6 +156,8 @@ export default function App() {
           setCustomerToken(null);
         }}
         admin={admin}
+        showInstallApp={!isInstalled}
+        onOpenInstallApp={() => setInstallModalOpen(true)}
       />
 
       {cartToast && (
@@ -199,6 +211,8 @@ export default function App() {
                 }}
                 onSelectMenu={setDetailMenu}
                 onAddToCart={(item) => handleAddToCart(item, 1)}
+                showInstallApp={!isInstalled}
+                onOpenInstallApp={() => setInstallModalOpen(true)}
               />
             )}
 
@@ -312,6 +326,15 @@ export default function App() {
             >
               Panel Admin
             </button>
+            {!isInstalled && (
+              <button
+                type="button"
+                onClick={() => setInstallModalOpen(true)}
+                className="cursor-pointer font-semibold text-[#14532D] hover:underline"
+              >
+                Unduh di Android
+              </button>
+            )}
           </div>
         </div>
       </footer>
@@ -370,6 +393,18 @@ export default function App() {
         }}
         onOpenAdminPanel={() => setRoute('admin')}
       />
+
+      <PWAInstallModal
+        open={installModalOpen}
+        onClose={() => setInstallModalOpen(false)}
+        canNativePrompt={canNativePrompt}
+        isInstalled={isInstalled}
+        isIOS={isIOS}
+        isInIframe={isInIframe}
+        onTriggerNativeInstall={promptInstall}
+      />
+
+      <OfflineIndicator />
     </div>
   );
 }

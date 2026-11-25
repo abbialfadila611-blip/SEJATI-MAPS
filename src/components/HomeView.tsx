@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Compass, MapPin, ShieldAlert, User } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Compass, MapPin, ShieldAlert, Smartphone, User } from 'lucide-react';
 import type { GeoValidationResult, KategoriMenu, MenuItem, Pelanggan, Warkop } from '../types';
 import { formatRupiah } from '../utils/geoPangkalPinang';
 import type { AppRoute } from './Navbar';
@@ -19,6 +19,8 @@ interface HomeViewProps {
   onSelectCategory: (kategoriId: number) => void;
   onSelectMenu: (item: MenuItem) => void;
   onAddToCart: (item: MenuItem) => void;
+  showInstallApp?: boolean;
+  onOpenInstallApp?: () => void;
 }
 
 export function HomeView({
@@ -35,6 +37,8 @@ export function HomeView({
   onSelectCategory,
   onSelectMenu,
   onAddToCart,
+  showInstallApp = false,
+  onOpenInstallApp,
 }: HomeViewProps) {
   const availableCount = menuList.filter((m) => m.status === 'tersedia').length;
   const featuredMenu = menuList.filter((m) => m.status === 'tersedia').slice(0, 6);
@@ -97,6 +101,16 @@ export function HomeView({
               <User className="h-4 w-4 text-[#14532D]" />
               <span>{customer ? customer.nama : 'Daftar / Login'}</span>
             </button>
+            {showInstallApp && onOpenInstallApp && (
+              <button
+                type="button"
+                onClick={onOpenInstallApp}
+                className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg border border-[#14532D]/30 bg-[#14532D]/8 px-4 py-2.5 text-sm font-semibold text-[#14532D] transition-colors hover:bg-[#14532D]/14 whitespace-nowrap shrink-0"
+              >
+                <Smartphone className="h-4 w-4 text-[#14532D]" />
+                <span>Pasang di Android</span>
+              </button>
+            )}
           </div>
         </div>
 
