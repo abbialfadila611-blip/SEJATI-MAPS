@@ -303,7 +303,7 @@ export function PWAInstallModal({
                   </div>
                   <p className="text-xs leading-relaxed text-[#57534E]">
                     Proyek Android Capacitor (<code className="font-mono text-[#1C1917]">id.pangkalpinang.sejatimaps</code>) dan workflow otomatis{' '}
-                    <code className="font-mono text-[#1C1917]">.github/workflows/android-apk.yml</code> sudah disiapkan. Anda tidak perlu laptop untuk membangun APK:
+                    <code className="font-mono text-[#1C1917]">.github/workflows/android.yml</code> sudah disiapkan. Anda tidak perlu laptop untuk membangun APK:
                   </p>
                   <ol className="space-y-2 text-xs leading-relaxed text-[#57534E]">
                     <li className="rounded-lg border border-[#E6E4DF] bg-[#FAFAF8] p-2.5">
